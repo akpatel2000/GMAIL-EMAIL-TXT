@@ -92,3 +92,40 @@ extractCheck <- function(inputEmail = character()) {
         return(0)
     }
 }
+
+extractNewIssue <- function(inputLine = character()) {
+    asof <- mdy(emailRead[2])
+    
+    # Check if it is Merrill new issue
+    newFlag <- sum(grepl("MSS Wire", emailRead[1:15], ignore.case = TRUE))
+    if (newFlag < 1) {
+        return(0)
+    } 
+    
+    # Check type of scale (ie preliminary)
+    lineRead <- grep(" ==$", emailRead[1:15], ignore.case = TRUE)
+    lineRead <- lineRead[1]
+    loc <- str_locate(emailRead[lineRead], " == ")
+    partLine <- substr(emailRead[lineRead], loc, 10000L)
+    partLine <- gsub("=", "", partLine)
+    partLine <- str_trim(scaleType, "both")
+    pricingFlag <- grepl("Preliminary Pricing", partLine, ignore.case = TRUE)
+    if (pricingFlag == FALSE) {
+        return(0)
+    }
+    
+    lineRead <- which(grep("^RE:", emailRead[1:15], ignore.case = TRUE))
+    dealPar <- as.numeric(gsub("[^0-9]", "",emailRead[lineRead]))
+    lineRead <- lineRead + 1
+    issuer <- emailRead[lineRead]
+    
+    lineRead <- grep(" +moody's: +([a-z0-9]+)? +s&p", emailRead[1:40], ignore.case = TRUE)
+    lineRead <- lineRead[1]
+    loc <- str_locate(emailRead[lineRead], "[Mm][Oo][Oo][Dd][Yy]'[Ss]:")
+    moody <- substr(emailRead[lineRead], loc[2]+1,loc[2]+7)
+    moody <- str_trim(moody, "both")
+    loc <- str_locate(emailRead[lineRead], "[Ss][&][Pp]:")
+    sp <- substr(emailRead[lineRead], loc[2]+1,loc[2]+7)
+    sp <- str_trim(sp, "both")
+    
+}
